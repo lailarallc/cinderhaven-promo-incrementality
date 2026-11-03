@@ -19,7 +19,7 @@ Measured error describes this estimator under a realistic, fully-known
 world. It is not a prediction of error on any other dataset.
 
 **Status:** launched. Three views built, audited and deployed; upstream data
-package pinned at v0.6.1. The repository keeps its original name,
+package pinned at v0.6.2. The repository keeps its original name,
 `cinderhaven-promo-incrementality`; **Lift Math** is the tool's public name.
 
 Roadmap: upstream v0.5.0 calendar density — raising promoted volume from ~1%
@@ -34,7 +34,7 @@ Built on the Cinderhaven synthetic dataset — a ~$25M specialty food brand,
 50 SKUs across 5 product lines and 6 contracted retailers. Data is synthetic;
 methodology and deliverables are real.
 
-The promo signal comes from `cinderhaven-promo-response` v0.6.1, an additive,
+The promo signal comes from `cinderhaven-promo-response` v0.6.2, an additive,
 seed-locked overlay: a curated promo-event calendar, a promo-responsive scan
 series, and a quarantined ground-truth table. It never alters canonical.
 
@@ -58,7 +58,7 @@ the tool displays is hand-entered.
   `cinderhaven_promo_response.testing.assert_no_truth_access` parses source
   with `ast` and can only audit `.py` files, so estimation code in another
   language would make the blindness claim unenforceable.
-- **`cinderhaven-promo-response` v0.6.1** (`bdb08c69`), pinned by commit SHA, consumed
+- **`cinderhaven-promo-response` v0.6.2** (`820e1935`), pinned by commit SHA, consumed
   through its public API only.
 - **SvelteKit + D3**, static via `adapter-static`, on **Cloudflare Pages**.
 
@@ -130,7 +130,7 @@ no stale artifact ships. Output lands in `web/build/`.
 `tests/test_data_contract.py` calls `pr.load()` (~8.5s cold, ~0.6s warm) and
 asserts the consumer contract against the pinned upstream version. It has passed
 cold since v0.1.1 fixed the v0.1.0 first-call crash (see FAILURES.md); the pin has
-since moved to v0.6.1. The truth gate is pure AST parsing over `src/` and needs no
+since moved to v0.6.2. The truth gate is pure AST parsing over `src/` and needs no
 data.
 
 ---

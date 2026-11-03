@@ -10,6 +10,11 @@ requires-python = ">=3.11"
 # pinned. An accuracy number is meaningless without knowing which data
 # generation it scored against — see DECISIONS.md.
 #
+# 820e193 = v0.6.2 (2026-09-02), a DOCS-ONLY release: citation fixes plus a
+# representation-stable canonical_hash. Its three data hashes are byte-identical
+# to v0.6.1's (1d76d12f / d2e6d58b / f650c132), so this re-pin needs NO re-score —
+# every accuracy figure below still describes the data. It is the honest tip.
+#
 # bdb08c6 = v0.6.1, the tip after a TWO-EPOCH jump from v0.4.0 (6399990):
 #   - v0.5.0 (calendar density): promoted volume ~1% -> ~25% of scan rows; the
 #     event universe 131 -> 5,897 on the same 1,340,462-row scan spine.
@@ -26,10 +31,10 @@ requires-python = ">=3.11"
 # seconds, not ~9.5 min.
 #
 # Repo now lives under the lailarallc org (fleet migration). Resolve the pin with
-# `git rev-parse v0.6.1^{commit}` — NOT `git rev-parse v0.6.1`, which returns the
+# `git rev-parse v0.6.2^{commit}` — NOT `git rev-parse v0.6.2`, which returns the
 # annotated tag object.
 dependencies = [
-    "cinderhaven-promo-response @ git+https://github.com/lailarallc/cinderhaven-promo-response@bdb08c6900880469ff0242e9f1c4fc9841a46267",
+    "cinderhaven-promo-response @ git+https://github.com/lailarallc/cinderhaven-promo-response@820e19358ed7e17e4b31ef0277f4ecbedce64262",
 ]
 
 # Local iteration off a working tree is a hand-run command, never a manifest
