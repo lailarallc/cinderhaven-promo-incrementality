@@ -169,14 +169,18 @@ them invalidates the deliverable.
   product economics a real client hands a vendor on day one; no vendor
   estimates a client's COGS and no accuracy claim rests on not knowing it.
   `economics()` mirrors the real engagement exactly.
-- **Banned: `config`, `constants`, `truth`.** `config` holds the response
-  coefficients (`LIFT_CENTERS`, `DIP_FRACTION`). `constants` holds the
-  baseline-demand generator (`BASE_UNITS`, `SKU_ARCHETYPES`,
+- **Banned: `config`, `constants`, `baseline`, `assortment`, `truth`.** `config`
+  holds the response coefficients (`LIFT_CENTERS`, `DIP_FRACTION`). `constants`
+  holds the baseline-demand generator (`BASE_UNITS`, `SKU_ARCHETYPES`,
   `ARCHETYPE_VELOCITY_MULT`, `SEASONALITY`, `SEASONAL_PROFILES`) — the true
-  baseline by another route. Both are the answer key. The AST gate denies only
-  `truth`; `config` and `constants` are the "structure walks out past the
+  baseline by another route; `baseline` builds that series and `assortment`
+  (v0.7.0) holds launch velocity, exit fades and sibling cannibalization. All are
+  the answer key. The upstream AST gate denies `truth` and, since v0.7.0,
+  `response`/`generate` and `build_response`/`load_truth`; `config`,
+  `constants`, `baseline` and `assortment` are the "structure walks out past the
   gate" hole and are banned by convention plus this repo's own supplementary
-  import check. If an estimator needs a prior, it derives it from observed data
+  import check (imports and `pr.<module>` attribute access). If an estimator
+  needs a prior, it derives it from observed data
   or cites an external source — never from the generator.
 - No `baseline_units`, `lift_units`, or `caused_by_promo_id`, ever.
 
