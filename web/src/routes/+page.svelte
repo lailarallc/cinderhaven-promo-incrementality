@@ -19,6 +19,9 @@
 	// only the first page of the ranked list. The full ~5,900-event array is fetched
 	// once, on the first filter touch or "show all", then cached for the session.
 	const { portfolios, summary, first_page } = scorecard;
+	// Scope-note ratios, computed by the pipeline from observed revenue (v0.7.0 re-run) —
+	// they were hand-typed before and would have drifted with every re-pin.
+	const spendCtx = summary.spend_context;
 
 	let events = $state(first_page);
 	let fullLoaded = $state(false);
@@ -253,10 +256,12 @@
 
 		<p class="scope-note ll-measure">
 			Trade spend here is the scan-promoted event slice of the trade book — accrued cost on promo
-			events only. It excludes slotting, off-invoice allowances and deductions. About a third of
-			volume runs on promotion, so the portfolio totals hold up: trade spend is about 2.4% of total
-			revenue, and just under 8% of promoted revenue — the event-level promotion allowance, not the
-			all-in trade figure that folds in slotting and deductions this dataset does not carry.
+			events only. It excludes slotting, off-invoice allowances and deductions.
+			Promotions carry {spendCtx.promoted_volume_pct.toFixed(1)}% of volume, so the portfolio
+			totals hold up: trade spend is {spendCtx.spend_pct_of_total_revenue.toFixed(1)}% of total
+			revenue and {spendCtx.spend_pct_of_promoted_revenue.toFixed(1)}% of promoted revenue — the
+			event-level promotion allowance, not the all-in trade figure that folds in slotting and
+			deductions this dataset does not carry.
 		</p>
 
 		<!-- One chart: where the estimable promotions landed under the active method. -->

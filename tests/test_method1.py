@@ -52,8 +52,8 @@ def test_money_is_integer_cents(result):
 
 def test_all_131_present_and_129_estimable(result):
     ev = result.events
-    assert len(ev) == 5897
-    assert result.portfolio["n_estimable"] == 5122
+    assert len(ev) == 5636
+    assert result.portfolio["n_estimable"] == 4818
 
 
 def test_non_estimable_events_carry_the_comparable_pool_reason(result):

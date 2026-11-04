@@ -10,31 +10,22 @@ requires-python = ">=3.11"
 # pinned. An accuracy number is meaningless without knowing which data
 # generation it scored against — see DECISIONS.md.
 #
-# 820e193 = v0.6.2 (2026-09-02), a DOCS-ONLY release: citation fixes plus a
-# representation-stable canonical_hash. Its three data hashes are byte-identical
-# to v0.6.1's (1d76d12f / d2e6d58b / f650c132), so this re-pin needs NO re-score —
-# every accuracy figure below still describes the data. It is the honest tip.
+# ff596fe = v0.7.0 (2026-11-04), the ASSORTMENT epoch: 9 launches and 8 exits
+# (seed 42, measured from scan presence: 6 incumbents + 2 launches exit).
+# Assortment volume is routed through baseline_units (launch cannibalization =
+# sibling baseline step-down; exit = sibling step-up), never transfer_units.
+# TRUTH-MOVING: unit truth AND the key universe move (promo_scan_delta 1,340,462 -> 1,293,126 rows; promo_events 5,897 -> 5,636).
+# Full logged re-run in DECISIONS.md (2026-11-04), with SPEC §4.9.7's four
+# pre-registered accuracy regimes scored. The upstream truth gate also tightened:
+# it now forbids `response`/`generate` and `build_response`/`load_truth`.
 #
-# bdb08c6 = v0.6.1, the tip after a TWO-EPOCH jump from v0.4.0 (6399990):
-#   - v0.5.0 (calendar density): promoted volume ~1% -> ~25% of scan rows; the
-#     event universe 131 -> 5,897 on the same 1,340,462-row scan spine.
-#   - v0.6.0 (commercial dynamics): trade economics reworked; spend and every
-#     per-event cost/ROI/giveaway figure move.
-#   - v0.6.1: adversarial plausibility-audit fixes (docs-only, data-neutral vs
-#     v0.6.0), so it is the honest tip to pin.
+# Prior pins: 820e193 = v0.6.2 (docs-only, no re-score); bdb08c6 = v0.6.1 (the
+# two-epoch calendar-density + commercial-dynamics jump from v0.4.0, 6399990).
 #
-# THE ACCURACY ARTIFACT MOVES THIS TIME — unlike the v0.4.0 rate re-pin. Both
-# epochs change unit truth (placement and volume, not just cost), so unit-level
-# error and bias must be re-scored against the new truth. First time accuracy
-# numbers move since launch, by design. Logged as one large re-run in DECISIONS.md,
-# with Method 1 vectorized (equivalence-proven) so the ~5,900-event world scores in
-# seconds, not ~9.5 min.
-#
-# Repo now lives under the lailarallc org (fleet migration). Resolve the pin with
-# `git rev-parse v0.6.2^{commit}` — NOT `git rev-parse v0.6.2`, which returns the
-# annotated tag object.
+# Resolve the pin with `git rev-parse v0.7.0^{commit}` — NOT `git rev-parse
+# v0.7.0`, which returns the annotated tag object.
 dependencies = [
-    "cinderhaven-promo-response @ git+https://github.com/lailarallc/cinderhaven-promo-response@820e19358ed7e17e4b31ef0277f4ecbedce64262",
+    "cinderhaven-promo-response @ git+https://github.com/lailarallc/cinderhaven-promo-response@ff596fe4599c3e6ab82451683bd13f36f22298a2",
 ]
 
 # Local iteration off a working tree is a hand-run command, never a manifest

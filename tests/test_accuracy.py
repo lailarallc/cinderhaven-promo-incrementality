@@ -1,4 +1,4 @@
-"""Accuracy artifact (accuracy/v1) — error metrics only, never truth.
+"""Accuracy artifact (accuracy/v2) — error metrics only, never truth.
 
 This repo is public and `.gitignore` does not protect an artifact written into the
 site's data directory by design (DECISIONS.md). So the one thing these tests must
@@ -11,8 +11,10 @@ This test imports `accuracy` (which imports truth); it lives in `tests/`, which 
 truth gate does not scan — the gate scans `src/`, where only `accuracy.py` is exempt.
 """
 
+import inspect
 import json
 
+import pandas as pd
 import pytest
 
 from incrementality import accuracy
@@ -48,6 +50,8 @@ OBSERVED_REGIMES = {
     "duration_band",
     "season",
     "match_relaxed_share",  # observed attribute of the match (Method 1)
+    "life_stage",  # scan presence: launch window / exit fade (accuracy-spec §11.3)
+    "sibling_assortment",  # scan presence of same-line launches/exits (§11.4)
 }
 
 
@@ -63,8 +67,15 @@ def payload(artifact_path):
 
 
 def test_schema_and_top_level_shape(payload):
-    assert payload["schema"] == "accuracy/v1"
-    assert set(payload) == {"schema", "package_version", "floor_units", "methods", "stories"}
+    assert payload["schema"] == "accuracy/v2"
+    assert set(payload) == {
+        "schema",
+        "package_version",
+        "floor_units",
+        "methods",
+        "predictions",
+        "stories",
+    }
     assert set(payload["methods"]) == {"method0", "method1"}
 
 
@@ -139,3 +150,80 @@ def test_artifact_uses_lf_newline_and_no_nan(artifact_path):
     assert raw.endswith(b"\n")
     assert b"NaN" not in raw
     assert b"Infinity" not in raw
+
+
+# --- v0.7.0 assortment regimes and row attribution (accuracy-spec §11) -------
+
+
+def test_row_attribution_never_reads_the_upstream_cause_tag():
+    # caused_by_promo_id is first-claim and SKU-order dependent upstream; rows are
+    # attributed by their observed promo_id instead (§11.1).
+    assert "caused_by" not in inspect.getsource(accuracy)
+
+
+def test_scoring_refuses_when_two_events_overlap_on_one_sku_retailer():
+    week = pd.Timestamp("2024-01-06")
+    events = pd.DataFrame(
+        {
+            "promo_id": ["A", "B"],
+            "sku": ["CHP-AS-001", "CHP-AS-001"],
+            "retailer_id": ["RET-KROGER", "RET-KROGER"],
+            "start_week": [week, week + pd.Timedelta(weeks=1)],
+            "end_week": [week + pd.Timedelta(weeks=2), week + pd.Timedelta(weeks=3)],
+        }
+    )
+    with pytest.raises(ValueError, match="overlap"):
+        accuracy.assert_one_event_per_row(events)
+
+
+def test_back_to_back_events_on_one_sku_retailer_are_not_an_overlap():
+    week = pd.Timestamp("2024-01-06")
+    events = pd.DataFrame(
+        {
+            "promo_id": ["A", "B"],
+            "sku": ["CHP-AS-001", "CHP-AS-001"],
+            "retailer_id": ["RET-KROGER", "RET-KROGER"],
+            "start_week": [week, week + pd.Timedelta(weeks=2)],
+            "end_week": [week + pd.Timedelta(weeks=1), week + pd.Timedelta(weeks=3)],
+        }
+    )
+    accuracy.assert_one_event_per_row(events)
+
+
+def test_life_stage_economics_counts_are_consistent(payload):
+    # Estimated, observed-count block (prediction 4): estimable <= events and
+    # lost <= estimable, per bucket, both methods; every event lands in a stage.
+    totals = []
+    for method in ("method0", "method1"):
+        buckets = payload["methods"][method]["life_stage_economics"]
+        assert {b["label"] for b in buckets} <= {
+            "continuing",
+            "launch (life weeks 1–13)",
+            "launch (after week 13)",
+            "exit fade (final 13 weeks)",
+        }
+        for b in buckets:
+            assert set(b) == {"label", "n_events", "n_estimable", "n_lost_money"}
+            assert 0 <= b["n_lost_money"] <= b["n_estimable"] <= b["n_events"]
+        totals.append(sum(b["n_events"] for b in buckets))
+    assert totals[0] == totals[1]
+
+
+def test_every_preregistered_prediction_is_reported_hit_miss_or_suppressed(payload):
+    # Four directions from upstream SPEC §4.9.7, none dropped silently (§11.6).
+    predictions = payload["predictions"]
+    assert [(p["regime"], p["label"]) for p in predictions] == [
+        (regime, label) for regime, label, _ in accuracy.PREDICTIONS
+    ]
+    for p in predictions:
+        for method in ("method0", "method1"):
+            block = p[method]
+            assert block["outcome"] in {"hit", "miss", "suppressed"}
+            if block["outcome"] == "suppressed":
+                assert block["n_events"] < accuracy.MIN_BUCKET
+                assert "median_signed_pct_error" not in block
+            else:
+                assert block["n_events"] >= accuracy.MIN_BUCKET
+                signed = block["median_signed_pct_error"]
+                predicted_high = p["predicted_bias"] == "high"
+                assert (block["outcome"] == "hit") == ((signed > 0) == predicted_high)

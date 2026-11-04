@@ -51,12 +51,12 @@ def test_net_margin_and_cost_are_integer_cents(result):
 
 def test_all_131_events_present_with_129_estimable(result):
     ev = result.events
-    assert len(ev) == 5897
-    assert result.portfolio["n_events"] == 5897
+    assert len(ev) == 5636
+    assert result.portfolio["n_events"] == 5636
     # N_estimable is pinned: it is the labelled denominator the tool refuses to
     # shrink silently. If it moves, the pre-period sufficiency logic changed.
-    assert result.portfolio["n_estimable"] == 5735
-    assert int(ev["estimable"].sum()) == 5735
+    assert result.portfolio["n_estimable"] == 5484
+    assert int(ev["estimable"].sum()) == 5484
 
 
 def test_non_estimable_events_all_carry_the_pre_period_reason(result):

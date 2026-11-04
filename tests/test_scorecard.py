@@ -57,6 +57,7 @@ SUMMARY_KEYS = {
     "cross_estimable",
     "net_margin_top_decile_share",
     "first_page_size",
+    "spend_context",
 }
 
 
@@ -102,11 +103,11 @@ def test_both_method_portfolios_carry_the_cfo_numbers(payload):
     assert set(portfolios) == {"method0", "method1"}
     for key, portfolio in portfolios.items():
         assert set(portfolio) == PORTFOLIO_KEYS, key
-        assert portfolio["n_events"] == 5897
+        assert portfolio["n_events"] == 5636
     # N_estimable is pinned per method: the labelled denominator the tool refuses to
     # shrink silently. If it moves, the sufficiency logic changed.
-    assert portfolios["method0"]["n_estimable"] == 5735
-    assert portfolios["method1"]["n_estimable"] == 5122
+    assert portfolios["method0"]["n_estimable"] == 5484
+    assert portfolios["method1"]["n_estimable"] == 4818
     assert portfolios["method0"]["method_label"].startswith("Method 0")
     assert portfolios["method1"]["method_label"].startswith("Method 1")
 
@@ -123,7 +124,7 @@ def test_first_page_is_a_bounded_declared_subset(payload, records):
 def test_every_event_co_locates_both_methods_with_declared_fields(records):
     # No intermediate columns and no truth leak out — only declared fields, and
     # method1 alone carries the relaxation regime dimension.
-    assert len(records) == 5897
+    assert len(records) == 5636
     for record in records:
         assert set(record) == SHARED_EVENT_KEYS
         assert set(record["method0"]) == METHOD0_KEYS
@@ -183,3 +184,17 @@ def test_artifact_uses_lf_newline_and_canonical_serialization(artifact_path):
     payload = json.loads(raw)
     expected = json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
     assert raw == expected.encode("utf-8")
+
+
+def test_spend_context_ratios_are_ordered_percentages(payload):
+    # Spend is a smaller share of all revenue than of promoted revenue, and
+    # promoted volume is a strict share of total volume — properties, not golden
+    # numbers. The scope-note copy reads these, so they must exist and be sane.
+    ctx = payload["summary"]["spend_context"]
+    assert set(ctx) == {
+        "promoted_volume_pct",
+        "spend_pct_of_total_revenue",
+        "spend_pct_of_promoted_revenue",
+    }
+    assert 0 < ctx["promoted_volume_pct"] < 100
+    assert 0 < ctx["spend_pct_of_total_revenue"] < ctx["spend_pct_of_promoted_revenue"] < 100

@@ -77,7 +77,7 @@ def built(tmp_path_factory):
 def test_schema_and_full_event_count(computed):
     assert computed["schema"] == "anatomy/v2"
     assert set(computed) == {"schema", "package_version", "events"}
-    assert len(computed["events"]) == 5897
+    assert len(computed["events"]) == 5636
 
 
 def test_artifact_carries_no_truth_decomposition_token(computed):
@@ -121,11 +121,11 @@ def test_non_estimable_events_have_null_volumes_and_a_reason(records):
 def test_slices_and_manifest_are_written(built):
     slices, manifest, _ = built
     assert manifest["schema"] == "anatomy/v2"
-    assert manifest["count"] == 5897
+    assert manifest["count"] == 5636
     # The prerender set is a bounded, non-empty subset — the whole point of Option B.
     assert 0 < len(manifest["prerender"]) < manifest["count"]
     slice_files = list(slices.glob("*.json"))
-    assert len(slice_files) == 5897
+    assert len(slice_files) == 5636
     sample = json.loads((slices / f"{manifest['prerender'][0]}.json").read_text(encoding="utf-8"))
     assert sample["schema"] == "anatomy/v2"
     assert set(sample["event"]) == META_KEYS
