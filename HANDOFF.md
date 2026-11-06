@@ -773,3 +773,13 @@ Open, not touched: the 2026-09-23 audit's CRITICAL cost/coverage mismatch in
 `common.assemble` (partial-coverage events charged full cost) still skews lost-money and
 ROI, Method 1 most; DECISIONS.md has two entries fused onto earlier "Do not" lines (~L396,
 ~L429) — formatting only.
+
+## 2026-11-06 — /wrap (v0.7.0 re-run, frozen)
+
+**Started from:** v0.6.2 live; v0.7.0 (assortment epoch) re-pin requested as a full logged re-run.
+
+**Did:** Everything in the 2026-11-04 entry above (ban ee88809, pre-registration de3c710 + tag, re-pin/re-run/copy 4c1dc0e). PR #1 opened on `rerun/v0.7.0`; CI truth-gate + data-contract green, build/deploy skipped on branch by design. 94 tests green.
+
+**State:** Frozen on `rerun/v0.7.0`, unmerged. Live site is v0.6.2.
+
+**Next:** Max audits PR #1 → merge (deploys) → confirm live asset matches HEAD. Then the 2026-09-23 CRITICAL cost/coverage mismatch in `common.assemble`.

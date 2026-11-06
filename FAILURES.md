@@ -37,6 +37,39 @@ quarto" or "scope, scrollytelling, decoration"]
 
 ## Entries
 
+### 2026-11-04 — Re-pin count pins were scattered across six test files
+
+**Attempted:** Re-pin to v0.7.0 and update the contract counts in
+`tests/test_data_contract.py` (events, rows, version), then run the suite.
+
+**Why it didn't work:** The same counts (5,897 events, 1,340,462 rows, 5,735 / 5,122
+estimable) were also hard-coded in test_anatomy, test_method0, test_method1,
+test_scorecard and test_skeleton. Seven tests failed after the pipeline itself was green.
+
+**What we did instead:** Grepped `tests/` for every old figure and updated all of them
+(5,636 / 1,293,126 / 5,484 / 4,818). 94 green. On the next re-pin, grep `tests/` for the
+old counts **before** running the suite, not after it fails.
+
+**Status:** Resolved
+
+**Tags:** re-pin, test-pins, counts, data-contract, pytest
+
+### 2026-11-04 — Bash heredocs with Python `'''` strings failed to parse
+
+**Attempted:** Patch files inline with `python - <<'EOF' ... EOF` where the Python used
+`'''` triple-quoted replacement blocks.
+
+**Why it didn't work:** The Bash tool's command parsing broke on the quote nesting
+before Python ever ran.
+
+**What we did instead:** Wrote each patch script to the session scratchpad and ran it
+by path. Same pattern as the 2026-08-26 PowerShell entry: multi-line edits go through
+a file, not a shell string.
+
+**Status:** Resolved
+
+**Tags:** bash, heredoc, quoting, tooling, editing
+
 ### 2026-09-01 — Cloudflare Pages `_redirects` SPA fallback shadowed the prerendered pages
 
 **Attempted:** For Option B's partial prerender (~150 of 5,897 event pages), a
