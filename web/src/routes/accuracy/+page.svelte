@@ -349,9 +349,13 @@
 		<div class="regime">
 			<h3>Do launch promotions pay back? What each method concludes</h3>
 			<p class="section-sub ll-measure">
-				The data package's own measurement finds that launch promotions lose money slightly
-				more often than continuing ones: small, ramping bases carry fixed promotion costs.
-				Under Method 0, {lossRate(econ0[LIFE])?.toFixed(0)}% of estimable launch-window
+				The data package measures true return on every promotion, on a ledger that does not
+				depend on event order (each event's own lift minus the dip on its own item). Over each
+				item's whole life, promotions on launched items lose money slightly more often than
+				promotions on incumbent items: small, ramping bases carry fixed promotion costs. The
+				figures below are a narrower slice and are estimates, not truth: promotions in a
+				launched item's first 13 weeks against continuing items, counting only the events
+				each method could estimate. Under Method 0, {lossRate(econ0[LIFE])?.toFixed(0)}% of estimable launch-window
 				promotions lost money against {lossRate(econ0.continuing)?.toFixed(0)}% of continuing
 				ones —
 				{#if keepsOrdering(econ0)}

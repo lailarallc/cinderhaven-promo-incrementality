@@ -543,7 +543,10 @@ custom composite charts, which is precisely the waterfall.
   not colder. Prediction 4 is the commercially loud one: **Method 0's ramp-inflated launch
   baseline error (+64.8%) makes launch-window promotions look like near-certain winners (7%
   lost) when the data package's own order-independent ledger says they lose slightly more
-  often than continuing ones.** Method 1 keeps the ordering, on 15 events.
+  often than continuing ones.** Method 1 keeps the ordering, on 15 events. *(Scoped by the
+  2026-11-06 logged correction: upstream compares launched vs **incumbent** SKUs over whole
+  life, true ROI; the figures here are estimates on the life-weeks-1–13 slice. Matched truth
+  confirms both outcomes.)*
 
 - **Row attribution — the stated rule (accuracy-spec §11.1).** Lift Math **never read
   `caused_by_promo_id`**, before or after this re-pin: a promoted row belongs to the event
@@ -568,6 +571,59 @@ custom composite charts, which is precisely the waterfall.
 - **Do not:** re-derive the 13-week life window, or any regime boundary, against the v0.7.0
   errors above — that is tuning. Do not read `caused_by_promo_id` anywhere. Do not present
   the launch-window M0 loss rate as a finding about launches; it is the estimator's error.
+
+### 2026-11-06 — LOGGED CORRECTION (Max's audit blocker): prediction 4 — the page sentence was mis-scoped, not mis-signed. No outcome changes.
+
+- **Decision:** The accuracy-page economics paragraph names the measurement it cites and
+  the narrower slice its own figures cover. Prediction 4 stays: **holds in truth**; Method 0's
+  estimate **reverses** it; Method 1's estimate **keeps** it. Verified against truth on the
+  same buckets, not inferred from a different population.
+- **The blocker:** the audit read the package's DECISIONS as recording launch promos losing
+  *less* often (47% vs 64%, a logged miss), against this page's "slightly more often". Both
+  figures are in the package, but the 47%-vs-64% one is **superseded inside the pinned tag
+  itself**. At `ff596fe` (v0.7.0), upstream DECISIONS strikes it through and records the
+  2026-11-04 plausibility-audit correction: it came from the order-dependent
+  `caused_by_promo_id` ledger (audit #9). On an order-independent ledger (each event's own
+  lift minus the dip on its own SKU) launch promos lose **more** often: seed 42, 64% vs 61%;
+  seed 43, 65% vs 62%. **Prediction 4 HOLDS** upstream. The page's direction was right.
+- **What was wrong — two scope errors, one population/denominator difference:**
+  1. The sentence did not name what it cited. Upstream's figure is **true** ROI, all
+     promotions on launched SKUs over each item's whole life, against **incumbent** SKUs,
+     on upstream's ledger. The page said "continuing ones" and named no ledger.
+  2. The figures beside it are a different population and denominator. They are
+     **estimated** loss rates for `launch (life weeks 1–13)` against `continuing`
+     (which excludes exit-fade and launch-after-week-13 events), counting each method's
+     **estimable** events only (M0 29 of 42, M1 15 of 42 launch-window events).
+  3. So "M1 keeps the true ordering (87% vs 48%)" (PR body, 2026-11-04 entry above) set an
+     estimate on one slice against truth measured on another. It was unverified, not wrong.
+- **Verification, on Lift Math's own estimand** (accuracy-spec §2/§11.1: causal
+  `lift − dip + transfer` on the event's own promoted rows, attributed by observed
+  `promo_id`, margin and cost exactly as `common.assemble`). This was a scratch run, nothing
+  added to the artifact, and every bucket is ≥5 events (§6):
+
+  | slice | launch (wk 1–13) | continuing | ordering |
+  | --- | --- | --- | --- |
+  | truth, all events, all promoted store-weeks | 45.2% (n=42) | 44.2% (n=5,455) | holds, by 1 pt |
+  | truth, M0's estimable events at M0's store-weeks | 48.3% (n=29) | 47.1% | holds |
+  | **M0 estimate**, same events | **6.9%** | 38.9% | **reversed** |
+  | truth, M1's estimable events at M1's store-weeks | 73.3% (n=15) | 62.2% | holds |
+  | **M1 estimate**, same events | **86.7%** | 48.1% | **kept** |
+
+  Truth on each method's own scored rows has the same ordering, so "reversed" and "kept"
+  are confirmed. Truth's margin is small (1 pt on all events, 1–11 pts on the scored
+  subsets), so "slightly" is the correct word. M1 keeps the ordering but overstates the gap.
+- **Not added to the artifact.** §11.5 pre-registered `life_stage_economics` as estimates
+  and observed counts only. Adding a truth loss rate after scoring would be a post-hoc
+  schema change. These figures are verification on record, not page copy. The page states
+  the measurement and scope in words and hand-types no upstream number (artifact-fed copy).
+- **Decided under the fork policy, flagged for Max:** (a) publish the matched-truth table in
+  DECISIONS rather than the artifact; (b) the page names upstream's measurement without
+  quoting 64%/61%.
+- **Scope:** `web/src/routes/accuracy/+page.svelte` (economics paragraph), PR #1 body. No
+  estimator, artifact or outcome change.
+- **Do not:** cite the struck 47%-vs-64% figure as upstream's result. Do not compare an
+  estimated launch-window rate with upstream's whole-life true rate as if they share a
+  population. Do not read `caused_by_promo_id` to reproduce upstream's numbers.
 
 ### 2026-11-04 — Truth-moving re-runs freeze on a branch until Max's audit; merge to main deploys.
 
