@@ -173,8 +173,34 @@ def _concentration(records):
     return out
 
 
-def _summary(records):
+def _spend_context(events, delta):
+    """Trade spend against observed scan revenue, for the scope note — computed, not
+    hand-typed (v0.7.0 re-run; the prior "2.4% / just under 8%" had no recorded
+    derivation). Observed layer only.
+
+    - spend: accrued cost summed over every event (the promo-event slice).
+    - revenue: ``observed_units`` x the price paid — ``promoted_price`` on a row whose
+      promotion was executed (``complied``), ``regular_price`` otherwise.
+    - promoted: rows that carry a scheduled ``promo_id``.
+    Ratios are returned as percentages to one decimal; the view words them.
+    """
+    paid = delta["promoted_price"].where(delta["complied"].astype(bool), delta["regular_price"])
+    paid = paid.fillna(delta["regular_price"])
+    revenue = delta["observed_units"] * paid
+    on_promo = delta["promo_id"].notna()
+    spend = float(events["accrued_cost"].sum())
     return {
+        "promoted_volume_pct": round(
+            100 * float(delta.loc[on_promo, "observed_units"].sum() / delta["observed_units"].sum()), 1
+        ),
+        "spend_pct_of_total_revenue": round(100 * spend / float(revenue.sum()), 1),
+        "spend_pct_of_promoted_revenue": round(100 * spend / float(revenue[on_promo].sum()), 1),
+    }
+
+
+def _summary(records, spend_context):
+    return {
+        "spend_context": spend_context,
         "tiers": {"method0": _tiers(records, "method0"), "method1": _tiers(records, "method1")},
         "filter_options": _filter_options(records),
         "cross_estimable": _cross_estimable(records),
@@ -214,6 +240,7 @@ def compute():
             "method1": result1.portfolio,
         },
         "events": _event_records(result0.events, result1.events),
+        "spend_context": _spend_context(*pr.load()),
     }
 
 
@@ -235,7 +262,7 @@ def build(out_path=DEFAULT_OUT, events_out=EVENTS_OUT):
         "schema": SCHEMA,
         "package_version": full["package_version"],
         "portfolios": full["portfolios"],
-        "summary": _summary(records),
+        "summary": _summary(records, full["spend_context"]),
         "first_page": _first_page(records),
     }
     events_payload = {

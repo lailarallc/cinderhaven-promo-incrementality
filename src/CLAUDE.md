@@ -17,7 +17,8 @@ Concretely, in this directory:
   The gate checks literals, not just imports, because
   `pd.read_parquet(".cache/truth-quarantine/...")` reaches truth without
   importing anything.
-- No `import cinderhaven_promo_response.config`. **The gate will not catch
+- No `import cinderhaven_promo_response.config` (nor `constants`, `baseline`,
+  `assortment` — `tests/test_import_ban.py` enforces all four). **The gate will not catch
   this one.** That module holds the generator's own coefficients — lift
   centers, dip fractions, transfer coefficients — which is the answer key by
   another route. An estimator that reads it is not estimating.

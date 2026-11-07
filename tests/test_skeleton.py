@@ -31,8 +31,8 @@ def test_counts_match_the_data_contract(tmp_path):
     payload = json.loads(_build_to(tmp_path).read_text(encoding="utf-8"))
     # The contract figures from CLAUDE.md. If these move, the upstream data
     # changed under a pinned SHA — which should be impossible.
-    assert payload["event_count"] == 5897
-    assert payload["scan_row_count"] == 1_340_462
+    assert payload["event_count"] == 5636
+    assert payload["scan_row_count"] == 1_293_126
 
 
 def test_every_numeric_value_is_an_integer(tmp_path):

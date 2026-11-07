@@ -746,3 +746,40 @@ X's card validator once — they cache hard on first fetch.
 **State:** Tree clean, 0 unpushed, CI green through 0b650f3 (redeploys an identical site — README isn't in `web/`, so no user-visible change). Tool is closed for this arc per Max's audit. 84 tests / ruff / blindness guards unchanged (no code touched). Nothing broken.
 
 **Next:** Unchanged — **Option B: observed-only dip + transfer estimators (tools 1c/1d)**, pre-registered + accuracy-scored, when the next arc opens. Nothing blocking.
+
+## 2026-11-04 — v0.7.0 assortment re-pin: logged re-run, frozen pending Max's audit
+
+**Started from:** v0.6.2 live (c4aaa44). Upstream released v0.7.0 (launches/exits),
+truth-moving.
+
+**Did:**
+- Extended the generator import ban to `baseline` + `assortment`, plus `pr.<module>`
+  attribute access (ee88809).
+- Pre-registered accuracy-spec §11 — life_stage + sibling_assortment regimes, the
+  prediction-4 economics block, and the row-attribution rule — tagged
+  `accuracy-preregistration-v0.7.0` and pushed before any v0.7.0 truth was read (de3c710).
+- Re-pinned to v0.7.0 (ff596fe), re-ran the pipeline, logged before/after in DECISIONS.
+  Headlines move modestly (M0 2,137 of 5,484 lost, ROI 1.44; accuracy 33.8% / 41.2%).
+  Predictions: 5 of 8 hit. Method 0 reverses the launch-promo loss ordering (7% vs 39%).
+  `clean_winner` error is now +180% / +185% (re-placed upstream onto a 10% digital coupon).
+- Copy: new Accuracy section (predictions, life stage, sibling, launch economics), Scorecard
+  scope ratios computed (`spend_context`) — all artifact-fed. README to v0.7.0.
+
+**State:** On branch `rerun/v0.7.0`, pushed, PR open. **Not merged, not deployed** — merge
+to main auto-deploys, so the branch is the freeze. Live site is still v0.6.2.
+
+**Next:** Max audits the PR. After it passes, merge (deploys) and verify live matches HEAD.
+Open, not touched: the 2026-09-23 audit's CRITICAL cost/coverage mismatch in
+`common.assemble` (partial-coverage events charged full cost) still skews lost-money and
+ROI, Method 1 most; DECISIONS.md has two entries fused onto earlier "Do not" lines (~L396,
+~L429) — formatting only.
+
+## 2026-11-06 — /wrap (v0.7.0 re-run, frozen)
+
+**Started from:** v0.6.2 live; v0.7.0 (assortment epoch) re-pin requested as a full logged re-run.
+
+**Did:** Everything in the 2026-11-04 entry above (ban ee88809, pre-registration de3c710 + tag, re-pin/re-run/copy 4c1dc0e). PR #1 opened on `rerun/v0.7.0`; CI truth-gate + data-contract green, build/deploy skipped on branch by design. 94 tests green.
+
+**State:** Frozen on `rerun/v0.7.0`, unmerged. Live site is v0.6.2.
+
+**Next:** Max audits PR #1 → merge (deploys) → confirm live asset matches HEAD. Then the 2026-09-23 CRITICAL cost/coverage mismatch in `common.assemble`.

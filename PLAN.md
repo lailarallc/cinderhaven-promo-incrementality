@@ -509,6 +509,23 @@ moves) — **copy re-audit** (each on-screen figure re-checked against the new a
 — **revisit the no-portfolio-% / trade-spend-to-revenue constraint** now that
 spend-to-revenue is realistic (DECISIONS 2026-08-24). **Then Option B.**
 
+### Arc 4 — v0.7.0 assortment re-validation (BUILT 2026-11-04; FROZEN pending Max's audit)
+
+Re-pinned to v0.7.0 (ff596fe; 9 launches, 8 exits). Full logged re-run (DECISIONS
+2026-11-04): scorecard, anatomy, accuracy re-scored; the four SPEC §4.9.7 regimes
+pre-registered (accuracy-spec §11, tag `accuracy-preregistration-v0.7.0`) and scored —
+5 of 8 checks hit; row attribution stated and enforced (observed `promo_id`, never
+`caused_by_promo_id`; overlap refuses); import ban extended to `baseline`/`assortment`;
+Scorecard scope ratios and the new Accuracy section artifact-fed.
+
+- [x] Re-pin + contract test
+- [x] Import ban: baseline + assortment (+ attribute access)
+- [x] Pre-register §11 regimes + attribution rule, tag before truth
+- [x] Re-run, before/after logged
+- [x] Copy regenerated from artifacts
+- [ ] **Max's audit** of branch `rerun/v0.7.0` (PR) — deploy is NOT done until it passes
+- [ ] Merge to main (deploys) after the audit
+
 ### Next arc — Option B estimators: observed-only dip + transfer (tools 1c/1d)
 
 Post-event pantry-load **dip** and sibling-delta **transfer**, estimable from

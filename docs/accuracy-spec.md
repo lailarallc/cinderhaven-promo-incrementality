@@ -154,3 +154,85 @@ distribution. The naive method losing is the exhibit.
 - These metrics are **frozen at `accuracy-preregistration`**. Any change after first
   scoring is a **logged re-run** in DECISIONS.md with before/after — never a silent
   edit. That is the whole point of tagging this before the scoring runs.
+
+## 11. Amendment — v0.7.0 assortment epoch (pre-registered 2026-11-04, before first v0.7.0 scoring)
+
+Committed and tagged `accuracy-preregistration-v0.7.0` **before** `accuracy.py` runs
+against v0.7.0 truth. The v0.7.0 pin was installed and `pr.load()` (observed layer
+only) was run to count launches and exits; no code in this repo has read v0.7.0
+truth. §§1–10 are unchanged except §2's attribution, made explicit in §11.1. The
+estimators are unchanged and stay frozen at their tags.
+
+### 11.1 Row attribution — the stated rule (clarifies §2; no metric changes)
+
+A promoted row belongs to **the event named by its observed `promo_id`**. Its
+`causal incremental units(r)` is the full row-level `lift − dip + transfer`, whatever
+event caused each term. **`caused_by_promo_id` is never read.** Upstream it is
+first-claim and assigned in SKU processing order (upstream plausibility audit
+2026-11-04 #9), so a per-event ledger built on it moves when event order moves; a
+ledger built on the observed `promo_id` cannot, because it is a function of the
+observed layer alone. The row-level unit values themselves accumulate additively
+upstream.
+
+- **Precondition, asserted at scoring time:** no two events on the same
+  `sku × retailer_id` overlap in time, so every promoted row has exactly one scheduled
+  event. A generation that breaks it makes scoring **refuse** — no tie-break rule is
+  applied silently. (v0.7.0 seed 42, observed: zero overlapping pairs.)
+- **Outside the estimand, as before:** an event's post-event dip on non-promoted weeks
+  and its drain on siblings' rows. The estimand is net incremental on the event's own
+  promoted rows (§2), the same quantity the estimator's `observed − baseline` measures
+  on those rows. Dip and transfer are the next estimation arc.
+
+### 11.2 Item life — observed definitions
+
+From the observed key universe (`promo_scan_delta` rows), per SKU `s`:
+`F(s)` = first `week_ending` with a row, `L(s)` = last; `W0`/`W1` = the window's first
+and last `week_ending`. `s` is a **launch** iff `F(s) > W0`; it **exits** iff
+`L(s) < W1`. Per `(s, retailer)`, `F(s, r)` and `L(s, r)` are the same over that
+retailer's stores. Observed scan presence, not a truth label: a real client's scan
+data shows exactly this.
+
+### 11.3 Regime `life_stage` (SPEC §4.9.7 predictions 1, 2, 4)
+
+For an event on `s` starting `S`:
+
+| label | rule | upstream prediction |
+| --- | --- | --- |
+| `exit fade (final 13 weeks)` | `s` exits and `S > L(s) − 13 weeks` | lift biased **low** (pre-period sits above the fading counterfactual) |
+| `launch (life weeks 1–13)` | `s` is a launch and `S ≤ F(s) + 12 weeks` | early ones inestimable; those that clear `MIN_PRE_PERIOD_WEEKS` biased **high** (pre-period on the ramp) |
+| `launch (after week 13)` | `s` is a launch, otherwise | — |
+| `continuing` | everything else | background |
+
+Precedence: fade, then launch window. 13 weeks is upstream's own launch-promo and fade
+window (SPEC §4.9.2 A3, §4.9.3 exit shape); chosen for that reason, before scoring.
+
+### 11.4 Regime `sibling_assortment` (SPEC §4.9.7 prediction 3)
+
+For an event on `s` in line `ℓ` at retailer `r`, starting `S`, against every other
+SKU `s'` in `ℓ` carried at `r`:
+
+| label | rule | upstream prediction |
+| --- | --- | --- |
+| `after same-line launch` | some launch `s'` has `S − 13 weeks < F(s', r) ≤ S` | baseline step-down; lift biased **low** |
+| `after same-line exit` | some exiting `s'` has `S − 13 weeks ≤ L(s', r) < S` | baseline step-up; lift biased **high** |
+| `after both` | both hold | — |
+| `none` | neither | background |
+
+Same 13-week window, same reason.
+
+### 11.5 Prediction 4 — launch-promo economics, as this tool estimates them
+
+Per method and `life_stage`: `n_events`, `n_estimable`, and the **estimated** loss
+rate (`n_lost_money / n_estimable`). These are estimates and observed counts, not
+truth, and are published as such. The prediction itself is about true ROI and is the
+data package's to measure (upstream reports 64% vs 61%, launch vs incumbent, seed 42,
+on an order-independent ledger). This view shows whether each method's estimate
+preserves or hides that ordering, and its signed bias on the same buckets (§11.3)
+says in which direction.
+
+### 11.6 Suppression and reporting
+
+§6's ≥5-event rule applies to every bucket. A predicted regime suppressed for size is
+**reported as suppressed with its count**, not dropped silently. Each prediction is
+scored hit or miss against the sign of the bucket's median signed error. A miss is
+reported as a miss.

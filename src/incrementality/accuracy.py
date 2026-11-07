@@ -23,7 +23,7 @@ from cinderhaven_promo_response import truth
 
 from incrementality import method0, method1
 
-SCHEMA = "accuracy/v1"
+SCHEMA = "accuracy/v2"  # v2 (2026-11-04): adds the §11 assortment regimes
 
 # A percentage of near-zero is meaningless: events whose |true incremental| is below
 # this fixed floor are excluded from the % headline and reported with absolute unit
@@ -36,6 +36,20 @@ STORY_TAGS = ("pantry_trap", "hero_cannibal", "pure_subsidy", "clean_winner")
 # Buckets smaller than this are suppressed, so no bucket's error reads back to an
 # individual event (spec accuracy §6, §7).
 MIN_BUCKET = 5
+
+# Item-life window for the §11 assortment regimes: upstream's own launch-promo and
+# exit-fade window (SPEC §4.9.2 A3, §4.9.3). Fixed in accuracy-spec §11 before any
+# v0.7.0 scoring — not tuned to results.
+LIFE_WINDOW = pd.Timedelta(weeks=13)
+
+# The pre-registered direction of each §4.9.7 prediction, as the sign of the median
+# signed error (accuracy-spec §11.3, §11.4). +1 = estimate biased high.
+PREDICTIONS = (
+    ("life_stage", "launch (life weeks 1–13)", +1),
+    ("life_stage", "exit fade (final 13 weeks)", -1),
+    ("sibling_assortment", "after same-line launch", -1),
+    ("sibling_assortment", "after same-line exit", +1),
+)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = _REPO_ROOT / "web" / "src" / "lib" / "data" / "accuracy.json"
@@ -115,6 +129,131 @@ def _observed_features(events):
     )
 
 
+# --- row attribution precondition (accuracy-spec §11.1) -----------------------
+
+
+def assert_one_event_per_row(events):
+    """Refuse to score if two events on one sku × retailer overlap in time.
+
+    Rows are attributed to the event named by their OBSERVED ``promo_id``; the
+    upstream per-row cause tag is first-claim and SKU-order dependent and is never
+    read here. That attribution is unambiguous only if each promoted row has exactly
+    one scheduled event. If a generation breaks it, scoring stops — no tie-break is
+    applied silently.
+    """
+    ordered = events.sort_values(["sku", "retailer_id", "start_week", "promo_id"], kind="stable")
+    previous_end = ordered.groupby(["sku", "retailer_id"])["end_week"].shift()
+    overlapping = ordered[ordered["start_week"] <= previous_end]
+    if len(overlapping):
+        raise ValueError(
+            f"{len(overlapping)} events overlap an earlier event on the same sku x retailer "
+            f"(first: {overlapping['promo_id'].iloc[0]}); row attribution by observed "
+            "promo_id would be ambiguous. Refusing to score (accuracy-spec §11.1)."
+        )
+
+
+# --- assortment regimes from the observed key universe (accuracy-spec §11) ----
+
+
+def _assortment_features(events, delta):
+    """``life_stage`` and ``sibling_assortment`` per event, from scan presence only.
+
+    A SKU's first and last observed week are facts of the observed layer — a real
+    client's scan data shows exactly this. No truth, no generator module.
+    """
+    window_start, window_end = delta["week_ending"].min(), delta["week_ending"].max()
+    presence = delta[["sku", "store_id", "week_ending"]].copy()
+    presence["retailer_id"] = presence["store_id"].str.rsplit("-S", n=1).str[0]
+
+    span = presence.groupby("sku")["week_ending"].agg(first_week="min", last_week="max")
+    span["is_launch"] = span["first_week"] > window_start
+    span["is_exit"] = span["last_week"] < window_end
+
+    ev = events[["promo_id", "sku", "retailer_id", "start_week"]].merge(
+        span, left_on="sku", right_index=True, how="left"
+    )
+    in_fade = ev["is_exit"] & (ev["start_week"] > ev["last_week"] - LIFE_WINDOW)
+    # S <= F + 12 weeks: life weeks 1–13, the launch week being life week 1.
+    last_launch_start = ev["first_week"] + LIFE_WINDOW - pd.Timedelta(weeks=1)
+    in_launch = ev["is_launch"] & (ev["start_week"] <= last_launch_start)
+    ev["life_stage"] = np.select(
+        [in_fade, in_launch, ev["is_launch"]],
+        ["exit fade (final 13 weeks)", "launch (life weeks 1–13)", "launch (after week 13)"],
+        default="continuing",
+    )
+
+    # Same-line siblings that launch or exit, with their first/last week per retailer.
+    churners = span[span["is_launch"] | span["is_exit"]].index
+    per_retailer = (
+        presence[presence["sku"].isin(churners)]
+        .groupby(["sku", "retailer_id"])["week_ending"]
+        .agg(sib_first="min", sib_last="max")
+        .reset_index()
+        .rename(columns={"sku": "sibling_sku"})
+        .merge(span[["is_launch", "is_exit"]], left_on="sibling_sku", right_index=True)
+    )
+    per_retailer["line"] = per_retailer["sibling_sku"].str.split("-").str[1]
+    ev["line"] = ev["sku"].str.split("-").str[1]
+    pairs = ev[["promo_id", "sku", "line", "retailer_id", "start_week"]].merge(
+        per_retailer, on=["line", "retailer_id"], how="inner"
+    )
+    pairs = pairs[pairs["sibling_sku"] != pairs["sku"]]
+    start = pairs["start_week"]
+    pairs["after_launch"] = (
+        pairs["is_launch"] & (pairs["sib_first"] > start - LIFE_WINDOW) & (pairs["sib_first"] <= start)
+    )
+    pairs["after_exit"] = (
+        pairs["is_exit"] & (pairs["sib_last"] >= start - LIFE_WINDOW) & (pairs["sib_last"] < start)
+    )
+    flags = pairs.groupby("promo_id")[["after_launch", "after_exit"]].any()
+    ev = ev.merge(flags, left_on="promo_id", right_index=True, how="left")
+    after_launch = ev["after_launch"].astype("boolean").fillna(False).astype(bool)
+    after_exit = ev["after_exit"].astype("boolean").fillna(False).astype(bool)
+    ev["sibling_assortment"] = np.select(
+        [after_launch & after_exit, after_launch, after_exit],
+        ["after both", "after same-line launch", "after same-line exit"],
+        default="none",
+    )
+    return ev[["promo_id", "life_stage", "sibling_assortment"]]
+
+
+def _life_stage_economics(result, assortment):
+    """Prediction 4 (accuracy-spec §11.5): coverage and the ESTIMATED loss rate by
+    life stage. Estimates and observed counts — no truth enters this block."""
+    ev = result.events[["promo_id", "estimable", "lost_money"]].merge(assortment, on="promo_id")
+    out = []
+    for label, group in ev.groupby("life_stage", sort=True):
+        estimable = group[group["estimable"]]
+        out.append(
+            {
+                "label": str(label),
+                "n_events": len(group),
+                "n_estimable": len(estimable),
+                "n_lost_money": int(estimable["lost_money"].sum()),
+            }
+        )
+    return out
+
+
+def _prediction_outcomes(scored_by_method):
+    """Hit / miss / suppressed for each pre-registered §4.9.7 direction (§11.6)."""
+    outcomes = []
+    for regime, label, sign in PREDICTIONS:
+        entry = {"regime": regime, "label": label, "predicted_bias": "high" if sign > 0 else "low"}
+        for method, scored in scored_by_method.items():
+            bucket = scored[scored["pct_defined"] & (scored[regime] == label)]
+            block = {"n_events": len(bucket)}
+            if len(bucket) < MIN_BUCKET:
+                block["outcome"] = "suppressed"
+            else:
+                median = float(bucket["signed_pct_error"].median())
+                block["median_signed_pct_error"] = round(median, 1)
+                block["outcome"] = "hit" if median * sign > 0 else "miss"
+            entry[method] = block
+        outcomes.append(entry)
+    return outcomes
+
+
 # --- scoring ----------------------------------------------------------------
 
 
@@ -181,7 +320,16 @@ def _method_block(result, truth_causal, features, extra_regimes=None):
     scored = _score_method(result, truth_causal).merge(features, on="promo_id", how="left")
     regimes = {
         feature: _regime(scored, feature)
-        for feature in ("promo_type", "retailer", "product_line", "depth_band", "duration_band", "season")
+        for feature in (
+            "promo_type",
+            "retailer",
+            "product_line",
+            "depth_band",
+            "duration_band",
+            "season",
+            "life_stage",
+            "sibling_assortment",
+        )
     }
     if extra_regimes:
         for name, column in extra_regimes.items():
@@ -223,9 +371,12 @@ def compute():
     # The one guard that must run before any scoring: refuse observed rows from one
     # generation scored against truth from another (the only silent failure here).
     truth.assert_aligned_with_observed(delta)
+    # Row attribution is by observed promo_id, so it must be unambiguous (§11.1).
+    assert_one_event_per_row(events)
     truth_causal = _truth_causal_per_row(truth.load_truth())
 
-    features = _observed_features(events)
+    assortment = _assortment_features(events, delta)
+    features = _observed_features(events).merge(assortment, on="promo_id", how="left")
     result0 = method0.estimate()
     result1 = method1.estimate()
 
@@ -237,12 +388,15 @@ def compute():
     block1, scored1 = _method_block(
         result1, truth_causal, features, extra_regimes={"match_relaxed_share": relaxed}
     )
+    block0["life_stage_economics"] = _life_stage_economics(result0, assortment)
+    block1["life_stage_economics"] = _life_stage_economics(result1, assortment)
 
     return {
         "schema": SCHEMA,
         "package_version": pr.__version__,
         "floor_units": FLOOR_UNITS,
         "methods": {"method0": block0, "method1": block1},
+        "predictions": _prediction_outcomes({"method0": scored0, "method1": scored1}),
         "stories": _story_lines(events, scored0, scored1),
     }
 

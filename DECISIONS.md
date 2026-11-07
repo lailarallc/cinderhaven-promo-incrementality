@@ -475,6 +475,168 @@ custom composite charts, which is precisely the waterfall.
   authored knob (owner, 2026-08-27), presentable only as mechanics, never a discovery. Do not
   re-derive the frozen estimator constants against v0.6.1 (see band-freeze).
 
+### 2026-11-04 — v0.7.0 re-pin (assortment epoch): the logged re-run. Truth and the key universe move.
+
+- **Decision:** Re-pin cinderhaven-promo-response v0.6.2 (820e193) → **v0.7.0 (ff596fe)**,
+  the assortment epoch. Logged as a full re-run: scorecard, anatomy and accuracy re-scored;
+  estimators unchanged and frozen at their tags. The four upstream-pre-registered error
+  regimes (SPEC §4.9.7) are scored as two new observed-only cuts, defined in
+  `docs/accuracy-spec.md` §11 and tagged `accuracy-preregistration-v0.7.0` **before** any
+  code in this repo read v0.7.0 truth (tag pushed before the scorer ran; git history is the
+  evidence).
+- **What moved, measured from scan presence (seed 42):** 9 launches, **8** exits (6
+  incumbents + 2 launches). The task brief said 12 exits; the observed layer says 8, and the
+  measured figure is the one recorded. 59 SKUs; `promo_scan_delta` 1,340,462 → **1,293,126**
+  rows; `promo_events` 5,897 → **5,636**. Zero overlapping same sku × retailer events.
+
+- **Before → after (v0.6.2 M0/M1 → v0.7.0 M0/M1):**
+
+  | figure | v0.6.2 | v0.7.0 |
+  | --- | --- | --- |
+  | events | 5,897 | 5,636 |
+  | estimable | 5,735 / 5,122 | 5,484 / 4,818 |
+  | lost money | 2,170 / 2,470 | 2,137 / 2,333 |
+  | portfolio trade spend | $2,930,338 / $2,728,644 | $2,981,268 / $2,680,543 |
+  | net incremental margin | $4,052,666 / $3,221,594 | $4,300,601 / $3,189,052 |
+  | portfolio ROI | 1.38 / 1.18 | 1.44 / 1.19 |
+  | accuracy median abs error | 32.8% / 42.0% | 33.8% / 41.2% |
+  | accuracy signed bias | +17.5% / +27.2% | +17.5% / +27.6% |
+  | events scored (% defined) | 5,625 / 4,957 | 5,369 / 4,624 |
+  | top-decile share of net margin | 58% / 56% | 59% / 58% |
+  | spend / total revenue · / promoted revenue | 2.4% · 7.7% (hand-typed) | 2.4% · 7.7% (computed) |
+
+  Portfolio headlines move modestly; the regime tables move by at most a few points
+  (Method 1 Costco 82.3% → 77.6%, Walmart 32.4% → 37.6%, the largest).
+
+- **The stories moved, and one error is now large — reported full-size.** Upstream re-placed
+  every story event (v0.7.0 protects story tracks across a full dip tail), so all four are
+  different promo_ids. Signed error, M0 / M1:
+
+  | story | v0.6.2 | v0.7.0 |
+  | --- | --- | --- |
+  | pure_subsidy | PRE-0100: −29.2% / +4.3% | PRE-0098: −23.0% / +12.4% |
+  | hero_cannibal | PRE-1985: +11.0% / +6.7% | PRE-1951: +3.8% / +7.2% |
+  | pantry_trap | PRE-2568: +1.3% / +3.5% | PRE-2555: +11.4% / +7.0% |
+  | clean_winner | PRE-4028: −16.3% / +38.1% | **PRE-3930: +180.1% / +184.5%** |
+
+  `clean_winner` is now a 10%-off `digital_coupon` (Kroger, SB-005, 2023-06-03) with
+  same-line sibling promotions at the same retailer around it — the small-denominator coupon
+  regime the page already flags (digital_coupon median error 105% / 133%). Both methods
+  nearly triple its true lift; it still ranks as a strong winner (ROI 5.74× / 6.67×). A
+  measurement fact of the new placement, not a scorer defect (observed context checked
+  first, per src/CLAUDE.md). **Not tuned.**
+
+- **The four pre-registered predictions — results, not tuned (5 of 8 checks hit):**
+
+  | prediction (SPEC §4.9.7) | predicted | M0 | M1 |
+  | --- | --- | --- | --- |
+  | 1 launch, life weeks 1–13 | biased high; early ones inestimable | +64.8% hit (29 of 42 estimable) | +45.4% hit (15 of 42) |
+  | 2 exit fade, final 13 weeks | biased low | −15.7% hit | +36.1% **miss** |
+  | 3a after same-line launch | biased low | +21.9% **miss** | +28.9% **miss** |
+  | 3b after same-line exit | biased high | +13.0% hit | +24.2% hit |
+  | 4 launch promos lose ≥ as often | estimated loss rate, launch window vs continuing | 7% vs 39% — **reversed** | 87% vs 48% — kept |
+
+  Reading the misses honestly: prediction 2 is a pre-period mechanism and Method 1 is not a
+  pre-period method, so its miss is the mechanism not applying, not the prediction being
+  wrong for Method 0 — but it is scored as a miss, as pre-registered. Prediction 3a misses on
+  both: the after-launch bucket runs *hotter* than the background (+21.9% vs +18.1% for M0),
+  not colder. Prediction 4 is the commercially loud one: **Method 0's ramp-inflated launch
+  baseline error (+64.8%) makes launch-window promotions look like near-certain winners (7%
+  lost) when the data package's own order-independent ledger says they lose slightly more
+  often than continuing ones.** Method 1 keeps the ordering, on 15 events. *(Scoped by the
+  2026-11-06 logged correction: upstream compares launched vs **incumbent** SKUs over whole
+  life, true ROI; the figures here are estimates on the life-weeks-1–13 slice. Matched truth
+  confirms both outcomes.)*
+
+- **Row attribution — the stated rule (accuracy-spec §11.1).** Lift Math **never read
+  `caused_by_promo_id`**, before or after this re-pin: a promoted row belongs to the event
+  named by its observed `promo_id`, and its truth quantity is the full row-level
+  `lift − dip + transfer`, which upstream accumulates additively. So upstream's first-claim,
+  SKU-order-dependent cause tag (its audit #9, the defect that moved launch-promo loss rate
+  47% → 64% upstream) never reached this tool's numbers. What was missing was the rule being
+  *stated and enforced*. Now: `accuracy.assert_one_event_per_row` **refuses to score** if two
+  events on one sku × retailer overlap, a test asserts `accuracy.py` never mentions
+  `caused_by`, and the rule is in the spec. The brief suggested a tie-break ("earliest event
+  by id"); refusing is stricter — a tie-break would silently re-attribute rows the observed
+  layer already attributes, and there are zero ties to break.
+- **Import ban extended** to the package's `baseline` and `assortment` modules (upstream
+  audit #6), plus `pr.<module>` attribute access for all four banned names. Separate commit,
+  demonstrated to fire.
+- **Scope-note ratios now computed** (`scorecard.summary.spend_context`): spend ÷ observed
+  revenue at the price paid (`promoted_price` on complied promo rows, `regular_price`
+  otherwise). The prior hand-typed "2.4% / just under 8%" had no recorded derivation; the
+  computed definition reproduces it (2.4% / 7.7%, 34.6% of volume on promotion).
+- **Scope:** pipeline, accuracy artifact (`accuracy/v2`), Scorecard + Accuracy copy; the
+  v0.7.0 generation only.
+- **Do not:** re-derive the 13-week life window, or any regime boundary, against the v0.7.0
+  errors above — that is tuning. Do not read `caused_by_promo_id` anywhere. Do not present
+  the launch-window M0 loss rate as a finding about launches; it is the estimator's error.
+
+### 2026-11-06 — LOGGED CORRECTION (Max's audit blocker): prediction 4 — the page sentence was mis-scoped, not mis-signed. No outcome changes.
+
+- **Decision:** The accuracy-page economics paragraph names the measurement it cites and
+  the narrower slice its own figures cover. Prediction 4 stays: **holds in truth**; Method 0's
+  estimate **reverses** it; Method 1's estimate **keeps** it. Verified against truth on the
+  same buckets, not inferred from a different population.
+- **The blocker:** the audit read the package's DECISIONS as recording launch promos losing
+  *less* often (47% vs 64%, a logged miss), against this page's "slightly more often". Both
+  figures are in the package, but the 47%-vs-64% one is **superseded inside the pinned tag
+  itself**. At `ff596fe` (v0.7.0), upstream DECISIONS strikes it through and records the
+  2026-11-04 plausibility-audit correction: it came from the order-dependent
+  `caused_by_promo_id` ledger (audit #9). On an order-independent ledger (each event's own
+  lift minus the dip on its own SKU) launch promos lose **more** often: seed 42, 64% vs 61%;
+  seed 43, 65% vs 62%. **Prediction 4 HOLDS** upstream. The page's direction was right.
+- **What was wrong — two scope errors, one population/denominator difference:**
+  1. The sentence did not name what it cited. Upstream's figure is **true** ROI, all
+     promotions on launched SKUs over each item's whole life, against **incumbent** SKUs,
+     on upstream's ledger. The page said "continuing ones" and named no ledger.
+  2. The figures beside it are a different population and denominator. They are
+     **estimated** loss rates for `launch (life weeks 1–13)` against `continuing`
+     (which excludes exit-fade and launch-after-week-13 events), counting each method's
+     **estimable** events only (M0 29 of 42, M1 15 of 42 launch-window events).
+  3. So "M1 keeps the true ordering (87% vs 48%)" (PR body, 2026-11-04 entry above) set an
+     estimate on one slice against truth measured on another. It was unverified, not wrong.
+- **Verification, on Lift Math's own estimand** (accuracy-spec §2/§11.1: causal
+  `lift − dip + transfer` on the event's own promoted rows, attributed by observed
+  `promo_id`, margin and cost exactly as `common.assemble`). This was a scratch run, nothing
+  added to the artifact, and every bucket is ≥5 events (§6):
+
+  | slice | launch (wk 1–13) | continuing | ordering |
+  | --- | --- | --- | --- |
+  | truth, all events, all promoted store-weeks | 45.2% (n=42) | 44.2% (n=5,455) | holds, by 1 pt |
+  | truth, M0's estimable events at M0's store-weeks | 48.3% (n=29) | 47.1% | holds |
+  | **M0 estimate**, same events | **6.9%** | 38.9% | **reversed** |
+  | truth, M1's estimable events at M1's store-weeks | 73.3% (n=15) | 62.2% | holds |
+  | **M1 estimate**, same events | **86.7%** | 48.1% | **kept** |
+
+  Truth on each method's own scored rows has the same ordering, so "reversed" and "kept"
+  are confirmed. Truth's margin is small (1 pt on all events, 1–11 pts on the scored
+  subsets), so "slightly" is the correct word. M1 keeps the ordering but overstates the gap.
+- **Not added to the artifact.** §11.5 pre-registered `life_stage_economics` as estimates
+  and observed counts only. Adding a truth loss rate after scoring would be a post-hoc
+  schema change. These figures are verification on record, not page copy. The page states
+  the measurement and scope in words and hand-types no upstream number (artifact-fed copy).
+- **Decided under the fork policy, flagged for Max:** (a) publish the matched-truth table in
+  DECISIONS rather than the artifact; (b) the page names upstream's measurement without
+  quoting 64%/61%.
+- **Scope:** `web/src/routes/accuracy/+page.svelte` (economics paragraph), PR #1 body. No
+  estimator, artifact or outcome change.
+- **Do not:** cite the struck 47%-vs-64% figure as upstream's result. Do not compare an
+  estimated launch-window rate with upstream's whole-life true rate as if they share a
+  population. Do not read `caused_by_promo_id` to reproduce upstream's numbers.
+
+### 2026-11-04 — Truth-moving re-runs freeze on a branch until Max's audit; merge to main deploys.
+
+- **Decision:** The v0.7.0 re-run is pushed to `rerun/v0.7.0` with a PR, not to `main`. Push
+  to `main` auto-deploys to liftmath.lailarallc.com (ci.yml `build` → `deploy`), so "frozen
+  pending Max's audit" and "work on main" conflict for any re-score. Freezing wins: an
+  unaudited truth-moving number going live is a publishing act, which is owner-class.
+- **Why it follows from precedent rather than needing a ruling:** the v0.6.1 arc shipped live
+  *then* took Max's five fixes — the audit is the gate on "done", and this keeps it the gate
+  on "public" too, at the cost of one merge. Flagged for Max's after-the-fact review.
+- **Scope:** re-runs that move a published number. Docs-only and copy-only changes stay on main.
+- **Do not:** merge the PR before Max's audit, or declare the deploy done before it.
+
 ### 2026-08-21 — Scorecard re-scored with both methods (artifact scorecard/v2). Logged re-run.
 
 - **Decision:** Adding Method 1 re-scores the Scorecard, logged as a re-run per the
