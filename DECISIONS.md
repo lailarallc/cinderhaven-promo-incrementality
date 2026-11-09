@@ -637,6 +637,8 @@ custom composite charts, which is precisely the waterfall.
 - **Scope:** re-runs that move a published number. Docs-only and copy-only changes stay on main.
 - **Do not:** merge the PR before Max's audit, or declare the deploy done before it.
 
+### 2026-11-09: Partner names relabeled at render time in web/ only (owner ruling; lailara-website DECISIONS 2026-11-05). No estimate, artifact, or copy changed. Flagged for Max's next audit.
+
 ### 2026-08-21 — Scorecard re-scored with both methods (artifact scorecard/v2). Logged re-run.
 
 - **Decision:** Adding Method 1 re-scores the Scorecard, logged as a re-run per the

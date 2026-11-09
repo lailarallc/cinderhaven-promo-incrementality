@@ -13,6 +13,7 @@
 	import scorecard from '$lib/data/scorecard.json';
 	import { dollars, roiText, pct, count } from '$lib/format.js';
 	import { FILTER_KEYS, parseFilters, matches, anyActive } from '$lib/filters.js';
+	import { retailerLabel, byRetailerLabel } from '$lib/displayLabels.js';
 
 	// Option B (DECISIONS 2026-08-27): the imported artifact carries the summary
 	// (portfolios, precomputed chart tiers, filter options, cross-estimable counts) and
@@ -64,7 +65,6 @@
 	let filters = $state({ retailer: '', line: '', type: '', status: '' });
 	const filterOptions = summary.filter_options;
 	const FILTER_LABELS = { retailer: 'Retailer', line: 'Product line', type: 'Promo type', status: 'Plan status' };
-	const retailerLabel = (v) => v.replace('RET-', '');
 
 	// The URL carries BOTH the filters and the active method, so a Scorecard row opens
 	// its event page on the same method it was showing (a Method 0 row → a Method 0 page),
@@ -334,7 +334,7 @@
 						<span class="filter-label">{FILTER_LABELS[key]}</span>
 						<select value={filters[key]} onchange={(ev) => setFilter(key, ev.currentTarget.value)}>
 							<option value="">All</option>
-							{#each filterOptions[key] as opt (opt)}
+							{#each key === 'retailer' ? [...filterOptions[key]].sort(byRetailerLabel) : filterOptions[key] as opt (opt)}
 								<option value={opt}>{key === 'retailer' ? retailerLabel(opt) : opt}</option>
 							{/each}
 						</select>
@@ -381,7 +381,7 @@
 										{#if isZeroPhantom(e)}<sup class="mark">‡</sup>{/if}
 									</span>
 									<span class="promo-meta"
-										>{e.retailer_id.replace('RET-', '')} · {e.sku} · {e.promo_type}</span
+										>{retailerLabel(e.retailer_id)} · {e.sku} · {e.promo_type}</span
 									>
 								</td>
 								<td class="col-num">{dollars(e[selected].net_margin_cents)}</td>
@@ -438,7 +438,7 @@
 							<li>
 								<a class="promo-id" href="/event/{e.promo_id}{stateQuery}">{e.promo_id}</a>
 								<span class="promo-meta"
-									>{e.retailer_id.replace('RET-', '')} · {e.sku} · {e.promo_type} ·
+									>{retailerLabel(e.retailer_id)} · {e.sku} · {e.promo_type} ·
 									{dollars(e.accrued_cost_cents)} spend</span
 								>
 							</li>

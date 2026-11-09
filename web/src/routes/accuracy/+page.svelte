@@ -7,6 +7,7 @@
 	// Imported at build time; written by src/incrementality/accuracy.py, which is the
 	// one module that reads truth and publishes error metrics only — never truth.
 	import accuracy from '$lib/data/accuracy.json';
+	import { retailerLabel } from '$lib/displayLabels.js';
 
 	const { methods, stories } = accuracy;
 	const m0 = methods.method0.headline;
@@ -38,8 +39,12 @@
 	function sharedRegime(feature) {
 		const b0 = Object.fromEntries(methods.method0.regimes[feature].map((b) => [b.label, b]));
 		const b1 = Object.fromEntries(methods.method1.regimes[feature].map((b) => [b.label, b]));
-		const labels = [...new Set([...Object.keys(b0), ...Object.keys(b1)])].sort();
-		return labels.map((label) => ({ label, m0: b0[label], m1: b1[label] }));
+		// Retailer buckets are keyed by platform ID; they show, and sort by, the public label.
+		const shown = feature === 'retailer' ? retailerLabel : (l) => l;
+		const labels = [...new Set([...Object.keys(b0), ...Object.keys(b1)])];
+		return labels
+			.map((label) => ({ label: shown(label), m0: b0[label], m1: b1[label] }))
+			.sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
 	}
 	const relaxRegime = methods.method1.regimes.match_relaxed_share ?? [];
 
