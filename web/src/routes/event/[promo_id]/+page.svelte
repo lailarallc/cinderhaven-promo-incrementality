@@ -31,6 +31,8 @@
 
 	const fmtUnits = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 	const units = (x) => (x === null || x === undefined ? '—' : fmtUnits.format(x));
+	// Depths are two-decimal values with float noise (10.979999999999999).
+	const fmtDepth = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
 
 	// --- waterfall geometry ---------------------------------------------------
@@ -137,7 +139,7 @@
 	<div class="ll-column">
 		<h1 class="title">{e.promo_id}</h1>
 		<p class="meta">
-			{retailerLabel(e.retailer_id)} · {e.sku} · {e.promo_type} · {e.discount_depth_pct}% off ·
+			{retailerLabel(e.retailer_id)} · {e.sku} · {e.promo_type} · {fmtDepth.format(e.discount_depth_pct)}% off ·
 			{e.n_weeks} {e.n_weeks === 1 ? 'week' : 'weeks'} · {e.start_week} to {e.end_week} · {e.funding_mechanism}
 			{#if e.plan_status !== 'executed'}<span class="badge badge-status">{e.plan_status}</span>{/if}
 			{#if e.story_tag}<span class="badge badge-story">{e.story_tag.replace('_', ' ')}</span>{/if}
