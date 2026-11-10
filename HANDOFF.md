@@ -783,3 +783,22 @@ ROI, Method 1 most; DECISIONS.md has two entries fused onto earlier "Do not" lin
 **State:** Frozen on `rerun/v0.7.0`, unmerged. Live site is v0.6.2.
 
 **Next:** Max audits PR #1 → merge (deploys) → confirm live asset matches HEAD. Then the 2026-09-23 CRITICAL cost/coverage mismatch in `common.assemble`.
+
+## 2026-11-09 — v0.7.0 merged and live; follow-ups shipped
+
+**Started from:** v0.7.0 frozen on `rerun/v0.7.0` (PR #1), live site v0.6.2.
+
+**Did:**
+- Max's audit blocker on prediction 4 resolved as a scope correction, not an outcome change
+  (76aac28; DECISIONS 2026-11-06 logged correction with the matched-truth table). The
+  /accuracy paragraph now names its measurement and scope.
+- PR #1 merged to main (a5dc539, `--merge` to keep commit-order blindness evidence) and deployed.
+- Other sessions shipped trade-partner role labels instead of retailer codes (b0a49f9) and
+  discount depth rounded to two decimals on event pages (6556270, Max's Nov 9 follow-up 2).
+
+**State:** origin/main == local 6556270. CI green on every job (truth gate, data contract,
+build, Cloudflare deploy). 94 tests pass. Live /accuracy carries the corrected paragraph;
+live /event/PRE-0807 shows "10.98% off".
+
+**Next:** Max audits the two live Lift Math pages. Then the 2026-09-23 CRITICAL
+cost/coverage mismatch in `common.assemble` (partial-coverage events charged full cost).
