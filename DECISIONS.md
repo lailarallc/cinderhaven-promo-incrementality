@@ -625,6 +625,26 @@ custom composite charts, which is precisely the waterfall.
   estimated launch-window rate with upstream's whole-life true rate as if they share a
   population. Do not read `caused_by_promo_id` to reproduce upstream's numbers.
 
+### 2026-11-09 — AUDIT PASSED (Max): v0.7.0 re-run and the Nov 9 relabel are audited and closed.
+
+- **Decision:** The v0.7.0 logged re-run (PR #1, merged a5dc539), the prediction-4 scope
+  correction (76aac28), the trade-partner relabel (b0a49f9) and the discount-depth rounding
+  (6556270) are audited live and closed. Lift Math has no open audit items.
+- **What Max checked, live:** /accuracy — 5 of 8 predictions matches its table; the four
+  life-stage rows sum to the 5,484 / 4,818 scored events in the headline; those reconcile
+  to the 5,636 events in the data files; package is v0.7.0; live matches the build.
+  /event/PRE-0807 — baseline + net = gross under both methods; return on spend = margin ÷
+  cost; depth reads 10.98%; retailer reads "National mass retailer". Real names: the label
+  map covers all six retailer IDs; the only real-name strings in source are dropdown option
+  values (IDs, exempt under the 2026-11-05 ruling).
+- **Tool-label gate:** 0 violations on liftmath.lailarallc.com (2026-11-09), down from 124.
+- **Not this repo:** the platform label map's RET-REGIONAL reads "Regional Group" and should
+  read "regional grocer group". The fix belongs in the platform's
+  `retailer_display_labels.json` and reaches every tool that vendors the map; Lift Math picks
+  it up on its next re-vendor. No local override.
+- **Do not:** patch the label locally in this repo — a local override forks the map the
+  label gate reads.
+
 ### 2026-11-04 — Truth-moving re-runs freeze on a branch until Max's audit; merge to main deploys.
 
 - **Decision:** The v0.7.0 re-run is pushed to `rerun/v0.7.0` with a PR, not to `main`. Push

@@ -802,3 +802,14 @@ live /event/PRE-0807 shows "10.98% off".
 
 **Next:** Max audits the two live Lift Math pages. Then the 2026-09-23 CRITICAL
 cost/coverage mismatch in `common.assemble` (partial-coverage events charged full cost).
+
+## 2026-11-09 (later) — Max's audit passed. Lift Math closed.
+
+**Did:** Recorded Max's live audit of /accuracy and /event/PRE-0807 as passed (DECISIONS
+2026-11-09). The v0.7.0 re-run and the Nov 9 relabel are audited and closed.
+
+**State:** Live == HEAD, CI green, 94 tests, label gate 0 violations. No open audit items.
+
+**Next:** Nothing blocking. Carried: the 2026-09-23 CRITICAL cost/coverage mismatch in
+`common.assemble`. Platform nit (not this repo): RET-REGIONAL "Regional Group" →
+"regional grocer group" in the platform's `retailer_display_labels.json`; re-vendor after.
